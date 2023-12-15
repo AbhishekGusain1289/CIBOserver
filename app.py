@@ -16,9 +16,9 @@ def recommend_dish():
         print("Inside the function")
         data = request.get_json()
         ingredients = data['ingredients']
-        df1=pd.read_csv("cleaned_file-1.csv")
-        df2=pd.read_csv("cleaned_file-2.csv")
-        df3=pd.read_csv("cleaned_file-3.csv")
+        df1=pd.read_csv("cleaned_file-1.csv",index_col="index")
+        df2=pd.read_csv("cleaned_file-2.csv",index_col="index")
+        df3=pd.read_csv("cleaned_file-3.csv",index_col="index")
         df=pd.concat([df1,df2,df3])
 
         # Use the model for recommendation
