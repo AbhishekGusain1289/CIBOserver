@@ -22,7 +22,10 @@ def recommend_dish():
         # Lowercase the elements of essentials list
         essentials = [essential.lower() for essential in data.get("essentials", [])]
 
-        df = pd.read_csv("cleaned_file.csv", index_col="index")
+        df1=pd.read_csv("cleaned_file-1.csv",index_col="index")
+        df2=pd.read_csv("cleaned_file-2.csv",index_col="index")
+        df3=pd.read_csv("cleaned_file-3.csv",index_col="index")
+        df=pd.concat([df1,df2,df3])
 
         result = filter_ingredients(df.copy(), essentials)
 
@@ -45,4 +48,4 @@ def recommend_dish():
         return jsonify({'error': 'Internal Server Error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False)
