@@ -45,4 +45,4 @@ def recommend_dish():
         return jsonify({'error': 'Internal Server Error'}), 500
 
 if _name_ == '_main_':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False)
