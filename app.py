@@ -4,7 +4,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from joblib import load
 import pandas as pd
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # Load the pre-trained model
 # tfidf_vectorizer = load('tfidf_vectorizer.joblib')
@@ -44,5 +44,5 @@ def recommend_dish():
         print(f"Error: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
 
-if _name_ == '_main_':
+if __name__ == '__main__':
     app.run(debug=False)
