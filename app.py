@@ -17,38 +17,31 @@ def recommend_dish():
             filtered_df = df[df['ingredients'].apply(lambda x: all(ingredient in x for ingredient in filter_list))]
             return filtered_df
 
+
+        print("Inside the function")
+
         data = request.get_json()
+
         ingredients = data['ingredients']
-        # Lowercase the elements of essentials list
-        essentials = [essential.lower() for essential in data.get("essentials", [])]
+        essentials=data['essentials']
+
 
         df1=pd.read_csv("cleaned_file-1.csv",index_col="index")
         df2=pd.read_csv("cleaned_file-2.csv",index_col="index")
         df3=pd.read_csv("cleaned_file-3.csv",index_col="index")
         df=pd.concat([df1,df2,df3])
-        result = filter_ingredients(df.copy(), essentials)
 
-        tfidf_vectorizer2=TfidfVectorizer(stop_words='english')
-        tfidf_matrix2=tfidf_vectorizer2.fit_transform(result['ingredients'])
-
-       
-        # Use the model for recommendation
-        user_idf = tfidf_vectorizer2.transform([ingredients])
-        sim_ing = cosine_similarity(user_idf, tfidf_matrix2)
-
-        
-
-        
+        result=filter_ingredients(df.copy(),essentials)
 
         # Use the model for recommendation
-        # user_idf = tfidf_vectorizer.transform([ingredients])
-        # sim_ing = cosine_similarity(user_idf, tfidf_matrix)
-        li = sorted(list(enumerate(sim_ing[0])), reverse=True, key=lambda x: x[1])[0:5]
+        user_idf = tfidf_vectorizer.transform([ingredients])
+        sim_ing = cosine_similarity(user_idf, tfidf_matrix)
+        li=sorted(list(enumerate(sim_ing[0])),reverse=True,key=lambda x:x[1])[0:5]
+        li
         indices = [index for index, _ in li]
-        newdf = result.iloc[indices]
-        json_data = newdf.to_json(orient='records')
-
-        return json_data
+        newdf=result.iloc[indices]
+        json=newdf.to_json(orient='records')
+        return json
 
     except Exception as e:
         # Log the exception details
@@ -56,4 +49,4 @@ def recommend_dish():
         return jsonify({'error': 'Internal Server Error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True,host="0.0.0.0")
+    app.run(debug=False)
