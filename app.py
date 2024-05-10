@@ -39,7 +39,7 @@ def recommend_dish():
         li=sorted(list(enumerate(sim_ing[0])),reverse=True,key=lambda x:x[1])[0:5]
         li
         indices = [index for index, _ in li]
-        newdf=result.iloc[indices]
+        newdf=df.iloc[indices]
         json=newdf.to_json(orient='records')
         return json
 
