@@ -6,47 +6,62 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# Load the pre-trained model
+# Load pre-trained models
 tfidf_vectorizer = load('tfidf_vectorizer.joblib')
 tfidf_matrix = load('tfidf_matrix.joblib')
+df = pd.concat([pd.read_csv(f"cleaned_file-{i}.csv", index_col="index") for i in range(1, 4)])  # Load all DataFrames
 
 @app.route('/recommend', methods=['POST'])
 def recommend_dish():
     try:
-        def filter_ingredients(df, filter_list):
-            filtered_df = df[df['ingredients'].apply(lambda x: all(ingredient in x for ingredient in filter_list))]
-            return filtered_df
-
-
-        print("Inside the function")
-
         data = request.get_json()
+        user_ingredients = data['ingredients'].lower().split(',')
+        essentials = [ess.lower() for ess in data.get("essentials", [])]
 
-        ingredients = data['ingredients']
-        essentials=data['essentials']
+        # Filter by essentials 
+        filtered_df = df[df['ingredients'].apply(lambda x: all(ess in x for ess in essentials))]
 
+        # If no essentials, use the pre-trained model
+        if not essentials:
+            tfidf_vectorizer_to_use = tfidf_vectorizer
+            tfidf_matrix_to_use = tfidf_matrix
+        else:
+            # Re-train vectorizer only on filtered data if essentials provided
+            tfidf_vectorizer_to_use = TfidfVectorizer(stop_words='english') 
+            tfidf_matrix_to_use = tfidf_vectorizer_to_use.fit_transform(filtered_df['ingredients'])
 
-        df1=pd.read_csv("cleaned_file-1.csv",index_col="index")
-        df2=pd.read_csv("cleaned_file-2.csv",index_col="index")
-        df3=pd.read_csv("cleaned_file-3.csv",index_col="index")
-        df=pd.concat([df1,df2,df3])
+        user_tfidf = tfidf_vectorizer_to_use.transform([','.join(user_ingredients)])
+        similarities = cosine_similarity(user_tfidf, tfidf_matrix_to_use)
+        top_indices = similarities[0].argsort()[-8:][::-1] 
 
-        result=filter_ingredients(df.copy(),essentials)
+        recommendations = filtered_df.iloc[top_indices].to_json(orient='records')
+        return recommendations
+    
+    except Exception as e:
+        app.logger.error(f"Error recommending dishes: {e}") 
+        return jsonify({'error': 'Internal Server Error'}), 500
+@app.route('/recommend_by_name', methods=['POST'])
+def recommend_by_name():
+    try:
+        data = request.get_json()
+        recipe_name_query = data['recipe_name'].lower()
 
-        # Use the model for recommendation
-        user_idf = tfidf_vectorizer.transform([ingredients])
-        sim_ing = cosine_similarity(user_idf, tfidf_matrix)
-        li=sorted(list(enumerate(sim_ing[0])),reverse=True,key=lambda x:x[1])[0:8]
-        li
-        indices = [index for index, _ in li]
-        newdf=df.iloc[indices]
-        json=newdf.to_json(orient='records')
-        return json
+        # Filter by name (case-insensitive partial match)
+        matching_recipes = df[df['name'].str.lower().str.contains(recipe_name_query)]
+
+        if not matching_recipes.empty:
+            # Option 1: Return the first match directly
+            return matching_recipes.iloc[0].to_json()  
+
+            # Option 2: Return multiple matches (if needed)
+            # return matching_recipes.to_json(orient='records')  
+
+        else:
+            return jsonify({'error': 'No matching recipes found'}), 404
 
     except Exception as e:
-        # Log the exception details
-        print(f"Error: {e}")
+        app.logger.error(f"Error recommending recipes: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True, host="0.0.0.0")
