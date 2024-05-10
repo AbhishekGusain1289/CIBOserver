@@ -36,7 +36,7 @@ def recommend_dish():
         # Use the model for recommendation
         user_idf = tfidf_vectorizer.transform([ingredients])
         sim_ing = cosine_similarity(user_idf, tfidf_matrix)
-        li=sorted(list(enumerate(sim_ing[0])),reverse=True,key=lambda x:x[1])[0:5]
+        li=sorted(list(enumerate(sim_ing[0])),reverse=True,key=lambda x:x[1])[0:8]
         li
         indices = [index for index, _ in li]
         newdf=df.iloc[indices]
