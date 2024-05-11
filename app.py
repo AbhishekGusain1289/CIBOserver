@@ -11,56 +11,47 @@ tfidf_vectorizer = load('tfidf_vectorizer.joblib')
 tfidf_matrix = load('tfidf_matrix.joblib')
 df = pd.concat([pd.read_csv(f"cleaned_file-{i}.csv", index_col="index") for i in range(1, 4)])  # Load all DataFrames
 
-@app.route('/recommend', methods=['POST'])
-def recommend_dish():
+@app.route('/', methods=['POST'])  # Single route
+def recommend():
     try:
         data = request.get_json()
-        user_ingredients = data['ingredients'].lower().split(',')
-        essentials = [ess.lower() for ess in data.get("essentials", [])]
 
-        # Filter by essentials 
-        filtered_df = df[df['ingredients'].apply(lambda x: all(ess in x for ess in essentials))]
+        if 'ingredients' in data:
+            # Ingredient-based recommendation
+            user_ingredients = data['ingredients'].lower().split(',')
+            essentials = [ess.lower() for ess in data.get("essentials", [])]
 
-        # If no essentials, use the pre-trained model
-        if not essentials:
-            tfidf_vectorizer_to_use = tfidf_vectorizer
-            tfidf_matrix_to_use = tfidf_matrix
-        else:
-            # Re-train vectorizer only on filtered data if essentials provided
-            tfidf_vectorizer_to_use = TfidfVectorizer(stop_words='english') 
-            tfidf_matrix_to_use = tfidf_vectorizer_to_use.fit_transform(filtered_df['ingredients'])
+            filtered_df = df[df['ingredients'].apply(lambda x: all(ess in x for ess in essentials))]
 
-        user_tfidf = tfidf_vectorizer_to_use.transform([','.join(user_ingredients)])
-        similarities = cosine_similarity(user_tfidf, tfidf_matrix_to_use)
-        top_indices = similarities[0].argsort()[-8:][::-1] 
+            if not essentials:
+                tfidf_vectorizer_to_use = tfidf_vectorizer
+                tfidf_matrix_to_use = tfidf_matrix
+            else:
+                tfidf_vectorizer_to_use = TfidfVectorizer(stop_words='english')
+                tfidf_matrix_to_use = tfidf_vectorizer_to_use.fit_transform(filtered_df['ingredients'])
 
-        recommendations = filtered_df.iloc[top_indices].to_json(orient='records')
-        return recommendations
-    
-    except Exception as e:
-        app.logger.error(f"Error recommending dishes: {e}") 
-        return jsonify({'error': 'Internal Server Error'}), 500
-@app.route('/recommend_by_name', methods=['POST'])
-def recommend_by_name():
-    try:
-        data = request.get_json()
-        recipe_name_query = data['recipe_name'].lower()
+            user_tfidf = tfidf_vectorizer_to_use.transform([','.join(user_ingredients)])
+            similarities = cosine_similarity(user_tfidf, tfidf_matrix_to_use)
+            top_indices = similarities[0].argsort()[-8:][::-1]
 
-        # Filter by name (case-insensitive partial match)
-        matching_recipes = df[df['name'].str.lower().str.contains(recipe_name_query)]
+            recommendations = filtered_df.iloc[top_indices].to_json(orient='records')
+            return recommendations
 
-        if not matching_recipes.empty:
-            # Option 1: Return the first match directly
-            return matching_recipes.iloc[0].to_json()  
+        elif 'recipe_name' in data:
+            # Recipe name-based recommendation
+            recipe_name_query = data['recipe_name'].lower()
+            matching_recipes = df[df['name'].str.lower().str.contains(recipe_name_query)]
 
-            # Option 2: Return multiple matches (if needed)
-            # return matching_recipes.to_json(orient='records')  
+            if not matching_recipes.empty:
+                return matching_recipes.iloc[0].to_json() 
+            else:
+                return jsonify({'error': 'No matching recipes found'}), 404
 
         else:
-            return jsonify({'error': 'No matching recipes found'}), 404
+            return jsonify({'error': 'Invalid request data'}), 400  # Bad Request
 
     except Exception as e:
-        app.logger.error(f"Error recommending recipes: {e}")
+        app.logger.error(f"Error recommending dishes/recipes: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
 
 if __name__ == '__main__':
