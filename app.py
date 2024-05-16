@@ -9,50 +9,37 @@ app = Flask(__name__)
 # Load pre-trained models
 tfidf_vectorizer = load('tfidf_vectorizer.joblib')
 tfidf_matrix = load('tfidf_matrix.joblib')
-df = pd.concat([pd.read_csv(f"cleaned_file-{i}.csv", index_col="index") for i in range(1, 4)])  # Load all DataFrames
+df = pd.concat([pd.read_csv(f"cleaned_file-{i}.csv", index_col="index") for i in range(1, 4)]) 
 
-@app.route('/', methods=['POST'])  # Single route
-def recommend():
+@app.route('/recommend_by_name', methods=['POST'])
+def recommend_by_name():
     try:
         data = request.get_json()
 
-        if 'ingredients' in data:
-            # Ingredient-based recommendation
-            user_ingredients = data['ingredients'].lower().split(',')
-            essentials = [ess.lower() for ess in data.get("essentials", [])]
+        if 'recipe_name' not in data:
+            return jsonify({'error': 'Missing recipe_name in request'}), 400
 
-            filtered_df = df[df['ingredients'].apply(lambda x: all(ess in x for ess in essentials))]
+        recipe_name_query = data['recipe_name'].lower()
 
-            if not essentials:
-                tfidf_vectorizer_to_use = tfidf_vectorizer
-                tfidf_matrix_to_use = tfidf_matrix
-            else:
-                tfidf_vectorizer_to_use = TfidfVectorizer(stop_words='english')
-                tfidf_matrix_to_use = tfidf_vectorizer_to_use.fit_transform(filtered_df['ingredients'])
+        # Filter by name (case-insensitive partial match)
+        matching_recipes = df[df['name'].str.lower().str.contains(recipe_name_query)]
 
-            user_tfidf = tfidf_vectorizer_to_use.transform([','.join(user_ingredients)])
-            similarities = cosine_similarity(user_tfidf, tfidf_matrix_to_use)
-            top_indices = similarities[0].argsort()[-8:][::-1]
-
-            recommendations = filtered_df.iloc[top_indices].to_json(orient='records')
-            return recommendations
-
-        elif 'recipe_name' in data:
-            # Recipe name-based recommendation
-            recipe_name_query = data['recipe_name'].lower()
-            matching_recipes = df[df['name'].str.lower().str.contains(recipe_name_query)]
-
-            if not matching_recipes.empty:
-                return matching_recipes.iloc[0].to_json() 
-            else:
-                return jsonify({'error': 'No matching recipes found'}), 404
+        if not matching_recipes.empty:
+            # Return top 10 matches (or fewer if less than 10)
+            top_matches = matching_recipes.head(10)
+            return top_matches.to_json(orient='records')
 
         else:
-            return jsonify({'error': 'Invalid request data'}), 400  # Bad Request
+            return jsonify({'error': 'No matching recipes found'}), 404
+
+    except pd.errors.EmptyDataError:
+        app.logger.error("No recipe data available")
+        return jsonify({'error': 'No recipe data found'}), 500
 
     except Exception as e:
-        app.logger.error(f"Error recommending dishes/recipes: {e}")
+        app.logger.error(f"Error recommending recipes: {e}")
         return jsonify({'error': 'Internal Server Error'}), 500
 
+
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=False)
