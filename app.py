@@ -26,7 +26,7 @@ def recommend_by_name():
 
         if not matching_recipes.empty:
             # Return top 10 matches (or fewer if less than 10)
-            top_matches = matching_recipes.head(10)
+            top_matches = matching_recipes.head(8)
             return top_matches.to_json(orient='records')
 
         else:
