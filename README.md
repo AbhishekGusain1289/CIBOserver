@@ -15,10 +15,10 @@ Simply select the ingredients you have on hand, and the system will recommend di
 ## Screenshots
 
 ### Main Interface
-<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/dish-final.png?raw=true" width="600">
+<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/dish-final.png?raw=true" width="400">
 
 ### Search Results
-<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/results.png?raw=true" width="600">
+<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/results.png?raw=true" width="400">
 
 ### Ingredient Selection
-<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/selected.png?raw=true" width="600">
+<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/selected.png?raw=true" width="400">
