@@ -15,30 +15,10 @@ Simply select the ingredients you have on hand, and the system will recommend di
 ## Screenshots
 
 ### Main Interface
-![Main Interface](https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/dish-final.png)
+<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/dish-final.png?raw=true" width="600">
 
 ### Search Results
-![Search Results](https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/results.png)
+<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/results.png?raw=true" width="600">
 
 ### Ingredient Selection
-![Ingredient Selection](https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/selected.png)
-
-## Getting Started
-
-[Add installation and setup instructions here]
-
-## Requirements
-
-[Add your project dependencies and requirements here]
-
-## Usage
-
-[Add usage examples and instructions here]
-
-## License
-
-[Add your license information here]
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit pull requests.
+<img src="https://github.com/AbhishekGusain1289/CIBOserver/blob/main/images/selected.png?raw=true" width="600">
